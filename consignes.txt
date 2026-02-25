@@ -1,0 +1,13 @@
+Faire un remake du jeu « PAC-MAN » de Namco (1980) qui sera le plus fidèle possible à la version
+originale. La programmation se fera en C et l’affichage avec la librairie SDL2 (ou SDL3). Un code
+d’exemple C permettant de tracer des sprites sera fourni.
+L’affichage se fera uniquement par copie de sprite à partir d’une ou plusieurs planches (images en format
+BMP), comme dans l’exemple fourni. Penser à gérer correctement la vitesse du jeu. La librairie SDL2/3
+est la seule autorisée. Le code fourni compile et fonctionne sur tous les systèmes. Votre démonstration
+devra compiler et fonctionner au moins sous Linux, et idéalement sur tous les systèmes
+Vous trouverez les détails et règles du jeu sur https://strategywiki.org/wiki/Pac-Man. Pour trouver des
+vidéos sur youtube, cherchez « pacman namco 1980 ».
+L’évaluation prendra en compte le contenu, les structures et algo mais aussi l’organisation, la lisibilité et
+l’élégance du code.
+La dernière séance du semestre sera dédiée à une présentation / démonstraion de 10 à 15 minutes
+La date de rendu sur le moodle du CNAM est fixé au lundi 12h précédent la dernière séance.a
