@@ -7,7 +7,7 @@
 #define MAZE_ROWS         36
 #define CELL_SIZE         16
 #define FRUIT_COL         13
-#define FRUIT_ROW         17
+#define FRUIT_ROW         20
 #define FRUIT_DURATION    10.0f
 #define FRUIT_THRESHOLD1  70
 #define FRUIT_THRESHOLD2  170

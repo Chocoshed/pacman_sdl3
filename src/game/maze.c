@@ -71,9 +71,9 @@ void maze_init(Maze *maze) {
         }
     }
 
-    /* fruit spawn au centre de la ghost house (ligne 17, cols 13-14) */
-    maze->cells[17][13] = CELL_FRUIT_SPAWN;
-    maze->cells[17][14] = CELL_FRUIT_SPAWN;
+    /* fruit spawn juste en dessous de la ghost house (ligne 20, cols 13-14) */
+    maze->cells[20][13] = CELL_FRUIT_SPAWN;
+    maze->cells[20][14] = CELL_FRUIT_SPAWN;
 }
 
 bool maze_is_wall(const Maze *maze, int col, int row) {
