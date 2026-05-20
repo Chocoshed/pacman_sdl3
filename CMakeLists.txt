@@ -33,7 +33,11 @@ else()
     message(STATUS "Using local SDL3")
 endif()
 
-add_executable(Projet WIN32 main.c)
+add_executable(Projet WIN32
+    src/main.c
+    src/game/maze.c
+    src/render/renderer.c
+)
 
 # set the include directory
 target_include_directories(Projet PUBLIC ${SDL3_INCLUDE_DIRS})

@@ -1,0 +1,49 @@
+#include "renderer.h"
+
+void draw_maze(SDL_Renderer *renderer, const Maze *maze) {
+    for (int row = 0; row < MAZE_ROWS; row++) {
+        for (int col = 0; col < MAZE_COLS; col++) {
+            SDL_FRect rect = {
+                .x = (float)(col * CELL_SIZE),
+                .y = (float)(row * CELL_SIZE),
+                .w = (float)CELL_SIZE,
+                .h = (float)CELL_SIZE,
+            };
+
+            switch ((CellType)maze->cells[row][col]) {
+                case CELL_WALL:
+                    SDL_SetRenderDrawColor(renderer, 33, 33, 222, 255);
+                    SDL_RenderFillRect(renderer, &rect);
+                    break;
+
+                case CELL_DOT: {
+                    float cx = rect.x + CELL_SIZE / 2.0f;
+                    float cy = rect.y + CELL_SIZE / 2.0f;
+                    SDL_FRect dot = { cx - 2.0f, cy - 2.0f, 4.0f, 4.0f };
+                    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+                    SDL_RenderFillRect(renderer, &dot);
+                    break;
+                }
+
+                case CELL_POWER_PELLET: {
+                    float cx = rect.x + CELL_SIZE / 2.0f;
+                    float cy = rect.y + CELL_SIZE / 2.0f;
+                    SDL_FRect pellet = { cx - 5.0f, cy - 5.0f, 10.0f, 10.0f };
+                    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+                    SDL_RenderFillRect(renderer, &pellet);
+                    break;
+                }
+
+                case CELL_GHOST_DOOR:
+                    SDL_SetRenderDrawColor(renderer, 255, 182, 193, 255);
+                    SDL_RenderFillRect(renderer, &rect);
+                    break;
+
+                case CELL_EMPTY:
+                case CELL_FRUIT_SPAWN:
+                default:
+                    break;
+            }
+        }
+    }
+}
