@@ -31,7 +31,7 @@ void pacman_init(Pacman *pacman) {
     pacman->move_timer   = 0.0f;
 }
 
-void pacman_update(Pacman *pacman, const Maze *maze, Direction input, float delta_time) {
+void pacman_update(Pacman *pacman, Maze *maze, Score *score, Direction input, float delta_time) {
     if (input != DIR_NONE)
         pacman->dir_buffered = input;
 
@@ -59,5 +59,13 @@ void pacman_update(Pacman *pacman, const Maze *maze, Direction input, float delt
             pacman->col = MAZE_COLS - 1;
         else if (pacman->col >= MAZE_COLS)
             pacman->col = 0;
+
+        CellType eaten = maze_eat_dot(maze, pacman->col, pacman->row);
+        if (eaten == CELL_DOT) {
+            score_add_points(score, 10);
+        } else if (eaten == CELL_POWER_PELLET) {
+            score_add_points(score, 50);
+            score->power_active = true;
+        }
     }
 }

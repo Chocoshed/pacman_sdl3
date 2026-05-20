@@ -24,5 +24,5 @@ typedef struct {
 
 void maze_init(Maze *maze);
 bool maze_is_wall(const Maze *maze, int col, int row);
-bool maze_eat_dot(Maze *maze, int col, int row);
+CellType maze_eat_dot(Maze *maze, int col, int row);
 int  maze_dots_remaining(const Maze *maze);

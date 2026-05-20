@@ -2,6 +2,7 @@
 #include <SDL3/SDL_main.h>
 #include "game/maze.h"
 #include "game/pacman.h"
+#include "game/score.h"
 #include "input/input.h"
 #include "render/renderer.h"
 
@@ -14,6 +15,7 @@ typedef struct {
     Maze          maze;
     InputState    input;
     Pacman        pacman;
+    Score         score;
     Uint64        last_ticks;
 } AppState;
 
@@ -40,6 +42,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     maze_init(&state->maze);
     input_init(&state->input);
     pacman_init(&state->pacman);
+    score_init(&state->score);
     state->last_ticks = SDL_GetTicks();
 
     *appstate = state;
@@ -67,13 +70,14 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     float  delta_time = (float)(now - state->last_ticks) / 1000.0f;
     state->last_ticks = now;
 
-    pacman_update(&state->pacman, &state->maze,
+    pacman_update(&state->pacman, &state->maze, &state->score,
                   input_get_direction(&state->input), delta_time);
 
     SDL_SetRenderDrawColor(state->renderer, 0, 0, 0, 255);
     SDL_RenderClear(state->renderer);
     draw_maze(state->renderer, &state->maze);
     draw_pacman(state->renderer, &state->pacman);
+    draw_hud(state->renderer, &state->score);
     SDL_RenderPresent(state->renderer);
 
     return SDL_APP_CONTINUE;

@@ -78,16 +78,16 @@ bool maze_is_wall(const Maze *maze, int col, int row) {
     return maze->cells[row][col] == CELL_WALL;
 }
 
-bool maze_eat_dot(Maze *maze, int col, int row) {
+CellType maze_eat_dot(Maze *maze, int col, int row) {
     if (col < 0 || col >= MAZE_COLS || row < 0 || row >= MAZE_ROWS)
-        return false;
-    uint8_t cell = maze->cells[row][col];
+        return CELL_EMPTY;
+    CellType cell = (CellType)maze->cells[row][col];
     if (cell == CELL_DOT || cell == CELL_POWER_PELLET) {
         maze->cells[row][col] = CELL_EMPTY;
         maze->dots_eaten++;
-        return true;
+        return cell;
     }
-    return false;
+    return CELL_EMPTY;
 }
 
 int maze_dots_remaining(const Maze *maze) {

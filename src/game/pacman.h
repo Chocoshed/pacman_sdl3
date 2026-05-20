@@ -2,6 +2,7 @@
 
 #include "../input/input.h"
 #include "maze.h"
+#include "score.h"
 
 #define PACMAN_SPEED 0.15f
 
@@ -14,4 +15,4 @@ typedef struct {
 } Pacman;
 
 void pacman_init(Pacman *pacman);
-void pacman_update(Pacman *pacman, const Maze *maze, Direction input, float delta_time);
+void pacman_update(Pacman *pacman, Maze *maze, Score *score, Direction input, float delta_time);
