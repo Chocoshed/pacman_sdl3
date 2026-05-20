@@ -6,11 +6,24 @@
 #include "score.h"
 
 typedef enum {
+    PHASE_TITLE,
+    PHASE_MENU,
     PHASE_PLAY,
+    PHASE_PAUSE,
     PHASE_DYING,
-    PHASE_GAME_OVER,
     PHASE_LEVEL_CLEAR,
+    PHASE_GAME_OVER,
 } GamePhase;
+
+typedef enum {
+    MENU_NEW_GAME = 0,
+    MENU_QUIT     = 1,
+    MENU_OPTION_COUNT,
+} MenuOption;
+
+typedef struct {
+    MenuOption selected;
+} MenuState;
 
 #define DEATH_PAUSE_DURATION 1.5f
 #define LEVEL_PAUSE_DURATION 2.0f
