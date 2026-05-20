@@ -19,10 +19,19 @@ typedef struct {
     Pacman        pacman;
     Score         score;
     Ghosts        ghosts;
+    MenuState     menu;
     GamePhase     phase;
     float         phase_timer;
     Uint64        last_ticks;
 } AppState;
+
+static void start_new_game(AppState *state) {
+    score_init(&state->score);
+    maze_init(&state->maze);
+    game_reset_positions(&state->pacman, &state->ghosts);
+    state->phase       = PHASE_PLAY;
+    state->phase_timer = 0.0f;
+}
 
 SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     (void)argc;
@@ -49,9 +58,10 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     pacman_init(&state->pacman);
     score_init(&state->score);
     ghosts_init(&state->ghosts);
-    state->phase       = PHASE_PLAY;
-    state->phase_timer = 0.0f;
-    state->last_ticks  = SDL_GetTicks();
+    state->menu.selected = MENU_NEW_GAME;
+    state->phase         = PHASE_TITLE;
+    state->phase_timer   = 0.0f;
+    state->last_ticks    = SDL_GetTicks();
 
     *appstate = state;
     return SDL_APP_CONTINUE;
@@ -78,57 +88,133 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     float  delta_time = (float)(now - state->last_ticks) / 1000.0f;
     state->last_ticks = now;
 
-    if (state->phase == PHASE_PLAY) {
-        pacman_update(&state->pacman, &state->maze, &state->score,
-                      input_get_direction(&state->input), delta_time);
+    SDL_AppResult result = SDL_APP_CONTINUE;
 
-        if (state->score.power_pellet_eaten) {
-            state->score.power_pellet_eaten = false;
-            state->score.ghost_combo        = 0;
-            ghosts_set_frightened(&state->ghosts);
-        }
+    switch (state->phase) {
 
-        ghosts_update(&state->ghosts, &state->maze, delta_time);
-        maze_update_fruit(&state->maze, delta_time);
+        case PHASE_TITLE:
+            if (state->input.confirm)
+                state->phase = PHASE_MENU;
+            break;
 
-        if (maze_try_eat_fruit(&state->maze, state->pacman.col, state->pacman.row))
-            score_add_points(&state->score, score_fruit_value(state->score.level));
-
-        GamePhase prev = state->phase;
-        game_check_collisions(&state->phase, &state->pacman, &state->ghosts, &state->score);
-        if (state->phase != prev)
-            state->phase_timer = DEATH_PAUSE_DURATION;
-
-        if (state->phase == PHASE_PLAY && maze_dots_remaining(&state->maze) == 0) {
-            state->phase       = PHASE_LEVEL_CLEAR;
-            state->phase_timer = LEVEL_PAUSE_DURATION;
-        }
-
-    } else if (state->phase == PHASE_DYING || state->phase == PHASE_LEVEL_CLEAR) {
-        state->phase_timer -= delta_time;
-        if (state->phase_timer <= 0.0f) {
-            if (state->phase == PHASE_LEVEL_CLEAR) {
-                score_next_level(&state->score);
-                maze_init(&state->maze);
+        case PHASE_MENU:
+            if (state->input.nav_up)
+                state->menu.selected = MENU_NEW_GAME;
+            if (state->input.nav_down)
+                state->menu.selected = MENU_QUIT;
+            if (state->input.confirm) {
+                if (state->menu.selected == MENU_NEW_GAME)
+                    start_new_game(state);
+                else
+                    result = SDL_APP_SUCCESS;
             }
-            game_reset_positions(&state->pacman, &state->ghosts);
-            state->phase = PHASE_PLAY;
+            break;
+
+        case PHASE_PLAY: {
+            pacman_update(&state->pacman, &state->maze, &state->score,
+                          input_get_direction(&state->input), delta_time);
+
+            if (state->score.power_pellet_eaten) {
+                state->score.power_pellet_eaten = false;
+                state->score.ghost_combo        = 0;
+                ghosts_set_frightened(&state->ghosts);
+            }
+
+            ghosts_update(&state->ghosts, &state->maze, delta_time);
+            maze_update_fruit(&state->maze, delta_time);
+
+            if (maze_try_eat_fruit(&state->maze, state->pacman.col, state->pacman.row))
+                score_add_points(&state->score, score_fruit_value(state->score.level));
+
+            GamePhase prev = state->phase;
+            game_check_collisions(&state->phase, &state->pacman, &state->ghosts, &state->score);
+            if (state->phase != prev)
+                state->phase_timer = DEATH_PAUSE_DURATION;
+
+            if (state->phase == PHASE_PLAY && maze_dots_remaining(&state->maze) == 0) {
+                state->phase       = PHASE_LEVEL_CLEAR;
+                state->phase_timer = LEVEL_PAUSE_DURATION;
+            }
+
+            if (state->input.pause)
+                state->phase = PHASE_PAUSE;
+            break;
         }
+
+        case PHASE_PAUSE:
+            if (state->input.pause)
+                state->phase = PHASE_PLAY;
+            break;
+
+        case PHASE_DYING:
+        case PHASE_LEVEL_CLEAR:
+            state->phase_timer -= delta_time;
+            if (state->phase_timer <= 0.0f) {
+                if (state->phase == PHASE_LEVEL_CLEAR) {
+                    score_next_level(&state->score);
+                    maze_init(&state->maze);
+                }
+                game_reset_positions(&state->pacman, &state->ghosts);
+                state->phase = PHASE_PLAY;
+            }
+            break;
+
+        case PHASE_GAME_OVER:
+            if (state->input.confirm) {
+                state->menu.selected = MENU_NEW_GAME;
+                state->phase         = PHASE_MENU;
+            }
+            break;
     }
+
+    input_clear_actions(&state->input);
 
     SDL_SetRenderDrawColor(state->renderer, 0, 0, 0, 255);
     SDL_RenderClear(state->renderer);
-    draw_maze(state->renderer, &state->maze);
-    draw_pacman(state->renderer, &state->pacman);
-    for (int i = 0; i < GHOST_COUNT; i++)
-        draw_ghost(state->renderer, &state->ghosts.ghosts[i]);
-    draw_fruit(state->renderer, &state->maze, state->score.level);
-    draw_hud(state->renderer, &state->score);
-    if (state->phase == PHASE_GAME_OVER)
-        draw_game_over(state->renderer);
-    SDL_RenderPresent(state->renderer);
 
-    return SDL_APP_CONTINUE;
+    switch (state->phase) {
+        case PHASE_TITLE:
+            draw_title(state->renderer);
+            break;
+
+        case PHASE_MENU:
+            draw_menu(state->renderer, (int)state->menu.selected);
+            break;
+
+        case PHASE_PLAY:
+        case PHASE_DYING:
+        case PHASE_LEVEL_CLEAR:
+            draw_maze(state->renderer, &state->maze);
+            draw_pacman(state->renderer, &state->pacman);
+            for (int i = 0; i < GHOST_COUNT; i++)
+                draw_ghost(state->renderer, &state->ghosts.ghosts[i]);
+            draw_fruit(state->renderer, &state->maze, state->score.level);
+            draw_hud(state->renderer, &state->score);
+            break;
+
+        case PHASE_PAUSE:
+            draw_maze(state->renderer, &state->maze);
+            draw_pacman(state->renderer, &state->pacman);
+            for (int i = 0; i < GHOST_COUNT; i++)
+                draw_ghost(state->renderer, &state->ghosts.ghosts[i]);
+            draw_fruit(state->renderer, &state->maze, state->score.level);
+            draw_hud(state->renderer, &state->score);
+            draw_pause(state->renderer);
+            break;
+
+        case PHASE_GAME_OVER:
+            draw_maze(state->renderer, &state->maze);
+            draw_pacman(state->renderer, &state->pacman);
+            for (int i = 0; i < GHOST_COUNT; i++)
+                draw_ghost(state->renderer, &state->ghosts.ghosts[i]);
+            draw_fruit(state->renderer, &state->maze, state->score.level);
+            draw_hud(state->renderer, &state->score);
+            draw_game_over(state->renderer, &state->score);
+            break;
+    }
+
+    SDL_RenderPresent(state->renderer);
+    return result;
 }
 
 void SDL_AppQuit(void *appstate, SDL_AppResult result) {
