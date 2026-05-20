@@ -1,5 +1,6 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
+#include "game/game.h"
 #include "game/maze.h"
 #include "game/pacman.h"
 #include "game/score.h"
@@ -18,6 +19,8 @@ typedef struct {
     Pacman        pacman;
     Score         score;
     Ghosts        ghosts;
+    GamePhase     phase;
+    float         phase_timer;
     Uint64        last_ticks;
 } AppState;
 
@@ -46,7 +49,9 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     pacman_init(&state->pacman);
     score_init(&state->score);
     ghosts_init(&state->ghosts);
-    state->last_ticks = SDL_GetTicks();
+    state->phase       = PHASE_PLAY;
+    state->phase_timer = 0.0f;
+    state->last_ticks  = SDL_GetTicks();
 
     *appstate = state;
     return SDL_APP_CONTINUE;
@@ -73,15 +78,43 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     float  delta_time = (float)(now - state->last_ticks) / 1000.0f;
     state->last_ticks = now;
 
-    pacman_update(&state->pacman, &state->maze, &state->score,
-                  input_get_direction(&state->input), delta_time);
+    if (state->phase == PHASE_PLAY) {
+        pacman_update(&state->pacman, &state->maze, &state->score,
+                      input_get_direction(&state->input), delta_time);
 
-    ghosts_update(&state->ghosts, &state->maze, delta_time);
+        if (state->score.power_pellet_eaten) {
+            state->score.power_pellet_eaten = false;
+            state->score.ghost_combo        = 0;
+            ghosts_set_frightened(&state->ghosts);
+        }
 
-    maze_update_fruit(&state->maze, delta_time);
+        ghosts_update(&state->ghosts, &state->maze, delta_time);
+        maze_update_fruit(&state->maze, delta_time);
 
-    if (maze_try_eat_fruit(&state->maze, state->pacman.col, state->pacman.row))
-        score_add_points(&state->score, score_fruit_value(state->score.level));
+        if (maze_try_eat_fruit(&state->maze, state->pacman.col, state->pacman.row))
+            score_add_points(&state->score, score_fruit_value(state->score.level));
+
+        GamePhase prev = state->phase;
+        game_check_collisions(&state->phase, &state->pacman, &state->ghosts, &state->score);
+        if (state->phase != prev)
+            state->phase_timer = DEATH_PAUSE_DURATION;
+
+        if (state->phase == PHASE_PLAY && maze_dots_remaining(&state->maze) == 0) {
+            state->phase       = PHASE_LEVEL_CLEAR;
+            state->phase_timer = LEVEL_PAUSE_DURATION;
+        }
+
+    } else if (state->phase == PHASE_DYING || state->phase == PHASE_LEVEL_CLEAR) {
+        state->phase_timer -= delta_time;
+        if (state->phase_timer <= 0.0f) {
+            if (state->phase == PHASE_LEVEL_CLEAR) {
+                score_next_level(&state->score);
+                maze_init(&state->maze);
+            }
+            game_reset_positions(&state->pacman, &state->ghosts);
+            state->phase = PHASE_PLAY;
+        }
+    }
 
     SDL_SetRenderDrawColor(state->renderer, 0, 0, 0, 255);
     SDL_RenderClear(state->renderer);
@@ -91,6 +124,8 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
         draw_ghost(state->renderer, &state->ghosts.ghosts[i]);
     draw_fruit(state->renderer, &state->maze, state->score.level);
     draw_hud(state->renderer, &state->score);
+    if (state->phase == PHASE_GAME_OVER)
+        draw_game_over(state->renderer);
     SDL_RenderPresent(state->renderer);
 
     return SDL_APP_CONTINUE;
