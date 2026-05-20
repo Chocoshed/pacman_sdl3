@@ -12,11 +12,12 @@ const int FRUIT_VALUES[FRUIT_TYPES] = {
 };
 
 void score_init(Score *score) {
-    score->score        = 0;
-    score->high_score   = 0;
-    score->lives        = 3;
-    score->level        = 1;
-    score->power_active = false;
+    score->score              = 0;
+    score->high_score         = 0;
+    score->lives              = 3;
+    score->level              = 1;
+    score->power_pellet_eaten = false;
+    score->ghost_combo        = 0;
 }
 
 void score_add_points(Score *score, int points) {
@@ -32,7 +33,16 @@ void score_lose_life(Score *score) {
 
 void score_next_level(Score *score) {
     score->level++;
-    score->score = 0;
+}
+
+int score_eat_ghost(Score *score) {
+    static const int COMBO_VALUES[4] = { 200, 400, 800, 1600 };
+    int idx = score->ghost_combo < 4 ? score->ghost_combo : 3;
+    int pts = COMBO_VALUES[idx];
+    if (score->ghost_combo < 3)
+        score->ghost_combo++;
+    score_add_points(score, pts);
+    return pts;
 }
 
 int score_fruit_value(int level) {
