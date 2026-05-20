@@ -47,3 +47,14 @@ void draw_maze(SDL_Renderer *renderer, const Maze *maze) {
         }
     }
 }
+
+void draw_pacman(SDL_Renderer *renderer, const Pacman *pacman) {
+    SDL_FRect rect = {
+        .x = (float)(pacman->col * CELL_SIZE),
+        .y = (float)(pacman->row * CELL_SIZE),
+        .w = (float)CELL_SIZE,
+        .h = (float)CELL_SIZE,
+    };
+    SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
+    SDL_RenderFillRect(renderer, &rect);
+}

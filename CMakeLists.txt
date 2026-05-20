@@ -36,7 +36,9 @@ endif()
 add_executable(Projet WIN32
     src/main.c
     src/game/maze.c
+    src/game/pacman.c
     src/render/renderer.c
+    src/input/input.c
 )
 
 # set the include directory
