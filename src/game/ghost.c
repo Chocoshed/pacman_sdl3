@@ -68,14 +68,21 @@ static void ghost_move(Ghost *ghost, const Maze *maze) {
     ghost->row += drow;
 }
 
+static void ghost_reset_to_start(Ghost *g) {
+    g->col              = GHOST_START[g->id].col;
+    g->row              = GHOST_START[g->id].row;
+    g->dir              = DIR_LEFT;
+    g->mode             = GHOST_SCATTER;
+    g->move_timer       = 0.0f;
+    g->frightened_timer = 0.0f;
+    g->eaten_timer      = 0.0f;
+}
+
 void ghosts_init(Ghosts *ghosts) {
     for (int i = 0; i < GHOST_COUNT; i++) {
-        Ghost *g    = &ghosts->ghosts[i];
-        g->id         = (GhostId)i;
-        g->col        = GHOST_START[i].col;
-        g->row        = GHOST_START[i].row;
-        g->dir        = DIR_LEFT;
-        g->mode       = GHOST_SCATTER;
+        Ghost *g  = &ghosts->ghosts[i];
+        g->id     = (GhostId)i;
+        ghost_reset_to_start(g);
         g->move_timer = (float)i * (GHOST_SPEED / GHOST_COUNT);
     }
 }
@@ -83,10 +90,43 @@ void ghosts_init(Ghosts *ghosts) {
 void ghosts_update(Ghosts *ghosts, const Maze *maze, float delta_time) {
     for (int i = 0; i < GHOST_COUNT; i++) {
         Ghost *g = &ghosts->ghosts[i];
+
+        if (g->mode == GHOST_FRIGHTENED) {
+            g->frightened_timer -= delta_time;
+            if (g->frightened_timer <= 0.0f)
+                g->mode = GHOST_SCATTER;
+        }
+
+        if (g->mode == GHOST_EATEN) {
+            g->eaten_timer -= delta_time;
+            if (g->eaten_timer <= 0.0f)
+                ghost_reset_to_start(g);
+        }
+
         g->move_timer += delta_time;
         if (g->move_timer >= GHOST_SPEED) {
             g->move_timer = 0.0f;
             ghost_move(g, maze);
         }
     }
+}
+
+void ghosts_set_frightened(Ghosts *ghosts) {
+    for (int i = 0; i < GHOST_COUNT; i++) {
+        Ghost *g = &ghosts->ghosts[i];
+        if (g->mode != GHOST_EATEN) {
+            g->mode             = GHOST_FRIGHTENED;
+            g->frightened_timer = GHOST_FRIGHTENED_DURATION;
+        }
+    }
+}
+
+void ghost_set_eaten(Ghost *ghost) {
+    ghost->mode        = GHOST_EATEN;
+    ghost->eaten_timer = GHOST_EATEN_DURATION;
+}
+
+void ghosts_reset(Ghosts *ghosts) {
+    for (int i = 0; i < GHOST_COUNT; i++)
+        ghost_reset_to_start(&ghosts->ghosts[i]);
 }

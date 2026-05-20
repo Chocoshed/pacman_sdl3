@@ -3,8 +3,10 @@
 #include "maze.h"
 #include "../input/input.h"
 
-#define GHOST_COUNT 4
-#define GHOST_SPEED 0.2f
+#define GHOST_COUNT              4
+#define GHOST_SPEED              0.2f
+#define GHOST_FRIGHTENED_DURATION 6.0f
+#define GHOST_EATEN_DURATION      2.0f
 
 typedef enum {
     GHOST_SCATTER    = 0,
@@ -27,6 +29,8 @@ typedef struct {
     Direction dir;
     GhostMode mode;
     float     move_timer;
+    float     frightened_timer;
+    float     eaten_timer;
 } Ghost;
 
 typedef struct {
@@ -35,3 +39,6 @@ typedef struct {
 
 void ghosts_init(Ghosts *ghosts);
 void ghosts_update(Ghosts *ghosts, const Maze *maze, float delta_time);
+void ghosts_set_frightened(Ghosts *ghosts);
+void ghost_set_eaten(Ghost *ghost);
+void ghosts_reset(Ghosts *ghosts);
