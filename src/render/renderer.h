@@ -11,3 +11,4 @@ void draw_pacman(SDL_Renderer *renderer, const Pacman *pacman);
 void draw_ghost(SDL_Renderer *renderer, const Ghost *ghost);
 void draw_hud(SDL_Renderer *renderer, const Score *score);
 void draw_fruit(SDL_Renderer *renderer, const Maze *maze, int level);
+void draw_game_over(SDL_Renderer *renderer);
