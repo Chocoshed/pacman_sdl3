@@ -115,6 +115,14 @@ void draw_fruit(SDL_Renderer *renderer, const Maze *maze, int level) {
     SDL_RenderFillRect(renderer, &rect);
 }
 
+void draw_game_over(SDL_Renderer *renderer) {
+    SDL_FRect overlay = { 0.0f, 240.0f, 448.0f, 96.0f };
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 220);
+    SDL_RenderFillRect(renderer, &overlay);
+    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+    SDL_RenderDebugText(renderer, 188.0f, 280.0f, "GAME OVER");
+}
+
 void draw_hud(SDL_Renderer *renderer, const Score *score) {
     /* ligne 0 : vies (rectangles jaunes) */
     SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
