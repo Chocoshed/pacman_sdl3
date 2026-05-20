@@ -23,12 +23,16 @@ static bool can_move(const Maze *maze, int col, int row, Direction dir) {
     return !maze_is_wall(maze, next_col, next_row);
 }
 
-void pacman_init(Pacman *pacman) {
+void pacman_reset(Pacman *pacman) {
     pacman->col          = 14;
     pacman->row          = 26;
     pacman->dir_current  = DIR_LEFT;
     pacman->dir_buffered = DIR_LEFT;
     pacman->move_timer   = 0.0f;
+}
+
+void pacman_init(Pacman *pacman) {
+    pacman_reset(pacman);
 }
 
 void pacman_update(Pacman *pacman, Maze *maze, Score *score, Direction input, float delta_time) {
@@ -65,7 +69,7 @@ void pacman_update(Pacman *pacman, Maze *maze, Score *score, Direction input, fl
             score_add_points(score, 10);
         } else if (eaten == CELL_POWER_PELLET) {
             score_add_points(score, 50);
-            score->power_active = true;
+            score->power_pellet_eaten = true;
         }
     }
 }
