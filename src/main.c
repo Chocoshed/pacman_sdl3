@@ -73,10 +73,16 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     pacman_update(&state->pacman, &state->maze, &state->score,
                   input_get_direction(&state->input), delta_time);
 
+    maze_update_fruit(&state->maze, delta_time);
+
+    if (maze_try_eat_fruit(&state->maze, state->pacman.col, state->pacman.row))
+        score_add_points(&state->score, score_fruit_value(state->score.level));
+
     SDL_SetRenderDrawColor(state->renderer, 0, 0, 0, 255);
     SDL_RenderClear(state->renderer);
     draw_maze(state->renderer, &state->maze);
     draw_pacman(state->renderer, &state->pacman);
+    draw_fruit(state->renderer, &state->maze, state->score.level);
     draw_hud(state->renderer, &state->score);
     SDL_RenderPresent(state->renderer);
 

@@ -59,6 +59,35 @@ void draw_pacman(SDL_Renderer *renderer, const Pacman *pacman) {
     SDL_RenderFillRect(renderer, &rect);
 }
 
+void draw_fruit(SDL_Renderer *renderer, const Maze *maze, int level) {
+    if (!maze->fruit_active)
+        return;
+
+    static const SDL_Color FRUIT_COLORS[] = {
+        {220,  20,  60, 255}, /* cerise   */
+        {255,  50, 100, 255}, /* fraise   */
+        {255, 165,   0, 255}, /* orange   */
+        {100, 200,  50, 255}, /* pomme    */
+        {100, 220, 100, 255}, /* melon    */
+        { 50,  50, 220, 255}, /* galaxian */
+        {255, 215,   0, 255}, /* cloche   */
+        {200, 200, 200, 255}, /* clé      */
+    };
+
+    int idx = level - 1;
+    if (idx >= FRUIT_TYPES) idx = FRUIT_TYPES - 1;
+    SDL_Color c = FRUIT_COLORS[idx];
+
+    SDL_FRect rect = {
+        .x = FRUIT_COL * CELL_SIZE + 2.0f,
+        .y = FRUIT_ROW * CELL_SIZE + 2.0f,
+        .w = 12.0f,
+        .h = 12.0f,
+    };
+    SDL_SetRenderDrawColor(renderer, c.r, c.g, c.b, c.a);
+    SDL_RenderFillRect(renderer, &rect);
+}
+
 void draw_hud(SDL_Renderer *renderer, const Score *score) {
     /* ligne 0 : vies (rectangles jaunes) */
     SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);

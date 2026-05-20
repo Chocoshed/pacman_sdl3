@@ -44,8 +44,12 @@ static const char *MAZE_STRINGS[MAZE_ROWS] = {
 };
 
 void maze_init(Maze *maze) {
-    maze->dots_total = 0;
-    maze->dots_eaten = 0;
+    maze->dots_total         = 0;
+    maze->dots_eaten         = 0;
+    maze->fruit_active       = false;
+    maze->fruit_spawned_once = false;
+    maze->fruit_spawned_twice = false;
+    maze->fruit_timer        = 0.0f;
 
     for (int row = 0; row < MAZE_ROWS; row++) {
         const char *line = MAZE_STRINGS[row];
@@ -92,4 +96,30 @@ CellType maze_eat_dot(Maze *maze, int col, int row) {
 
 int maze_dots_remaining(const Maze *maze) {
     return maze->dots_total - maze->dots_eaten;
+}
+
+void maze_update_fruit(Maze *maze, float delta_time) {
+    if (!maze->fruit_active) {
+        if (maze->dots_eaten >= FRUIT_THRESHOLD1 && !maze->fruit_spawned_once) {
+            maze->fruit_active       = true;
+            maze->fruit_spawned_once = true;
+            maze->fruit_timer        = FRUIT_DURATION;
+        } else if (maze->dots_eaten >= FRUIT_THRESHOLD2 && !maze->fruit_spawned_twice) {
+            maze->fruit_active        = true;
+            maze->fruit_spawned_twice = true;
+            maze->fruit_timer         = FRUIT_DURATION;
+        }
+    } else {
+        maze->fruit_timer -= delta_time;
+        if (maze->fruit_timer <= 0.0f)
+            maze->fruit_active = false;
+    }
+}
+
+bool maze_try_eat_fruit(Maze *maze, int col, int row) {
+    if (maze->fruit_active && col == FRUIT_COL && row == FRUIT_ROW) {
+        maze->fruit_active = false;
+        return true;
+    }
+    return false;
 }
