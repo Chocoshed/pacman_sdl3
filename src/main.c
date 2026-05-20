@@ -3,6 +3,7 @@
 #include "game/maze.h"
 #include "game/pacman.h"
 #include "game/score.h"
+#include "game/ghost.h"
 #include "input/input.h"
 #include "render/renderer.h"
 
@@ -16,6 +17,7 @@ typedef struct {
     InputState    input;
     Pacman        pacman;
     Score         score;
+    Ghosts        ghosts;
     Uint64        last_ticks;
 } AppState;
 
@@ -43,6 +45,7 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     input_init(&state->input);
     pacman_init(&state->pacman);
     score_init(&state->score);
+    ghosts_init(&state->ghosts);
     state->last_ticks = SDL_GetTicks();
 
     *appstate = state;
@@ -73,6 +76,8 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     pacman_update(&state->pacman, &state->maze, &state->score,
                   input_get_direction(&state->input), delta_time);
 
+    ghosts_update(&state->ghosts, &state->maze, delta_time);
+
     maze_update_fruit(&state->maze, delta_time);
 
     if (maze_try_eat_fruit(&state->maze, state->pacman.col, state->pacman.row))
@@ -82,6 +87,8 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
     SDL_RenderClear(state->renderer);
     draw_maze(state->renderer, &state->maze);
     draw_pacman(state->renderer, &state->pacman);
+    for (int i = 0; i < GHOST_COUNT; i++)
+        draw_ghost(state->renderer, &state->ghosts.ghosts[i]);
     draw_fruit(state->renderer, &state->maze, state->score.level);
     draw_hud(state->renderer, &state->score);
     SDL_RenderPresent(state->renderer);

@@ -59,6 +59,33 @@ void draw_pacman(SDL_Renderer *renderer, const Pacman *pacman) {
     SDL_RenderFillRect(renderer, &rect);
 }
 
+void draw_ghost(SDL_Renderer *renderer, const Ghost *ghost) {
+    SDL_FRect rect = {
+        .x = (float)(ghost->col * CELL_SIZE),
+        .y = (float)(ghost->row * CELL_SIZE),
+        .w = (float)CELL_SIZE,
+        .h = (float)CELL_SIZE,
+    };
+
+    switch (ghost->mode) {
+        case GHOST_FRIGHTENED:
+            SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+            break;
+        case GHOST_EATEN:
+            SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+            break;
+        default:
+            switch (ghost->id) {
+                case GHOST_BLINKY: SDL_SetRenderDrawColor(renderer, 255,   0,   0, 255); break;
+                case GHOST_PINKY:  SDL_SetRenderDrawColor(renderer, 255, 184, 255, 255); break;
+                case GHOST_INKY:   SDL_SetRenderDrawColor(renderer,   0, 255, 255, 255); break;
+                case GHOST_CLYDE:  SDL_SetRenderDrawColor(renderer, 255, 184,  82, 255); break;
+            }
+            break;
+    }
+    SDL_RenderFillRect(renderer, &rect);
+}
+
 void draw_fruit(SDL_Renderer *renderer, const Maze *maze, int level) {
     if (!maze->fruit_active)
         return;
