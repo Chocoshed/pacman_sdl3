@@ -40,7 +40,9 @@ add_executable(Projet WIN32
     src/game/pacman.c
     src/game/ghost.c
     src/game/score.c
-    src/render/renderer.c
+    src/render/renderer_world.c
+    src/render/renderer_hud.c
+    src/render/renderer_ui.c
     src/input/input.c
 )
 
