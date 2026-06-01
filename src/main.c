@@ -120,7 +120,7 @@ SDL_AppResult SDL_AppIterate(void *appstate) {
                 ghosts_set_frightened(&state->ghosts);
             }
 
-            ghosts_update(&state->ghosts, &state->maze, delta_time);
+            ghosts_update(&state->ghosts, &state->maze, &state->pacman, delta_time);
             maze_update_fruit(&state->maze, delta_time);
 
             if (maze_try_eat_fruit(&state->maze, state->pacman.col, state->pacman.row))
