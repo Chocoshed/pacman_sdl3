@@ -141,6 +141,8 @@ rapporte les bons points.
 
 **Objectif :** remplacer tous les rectangles par les vrais sprites.
 
+Spritesheet à utiliser : assets/spritesheetPacman.bmp
+
 - `sprite.h/.c` :
   - `sprite_load()` : charger le BMP, créer la texture SDL
   - `Spritesheet` : tableau de `SDL_FRect` source indexés par frame
@@ -151,6 +153,7 @@ rapporte les bons points.
   - Pac-Man : bouche ouverte → fermée (4 frames × 4 directions)
   - Fantômes : 2 frames par direction, 2 frames frightened, 2 frames eaten
   - Fruits : 1 frame par type
+- tracer le labyrinthe avec les tuiles
 
 **Critère de validation :** tous les sprites s'affichent et s'animent correctement.
 
