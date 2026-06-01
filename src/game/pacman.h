@@ -1,12 +1,16 @@
 #pragma once
 
-#include "../input/input.h"
+#include "../types.h"
 #include "maze.h"
 #include "score.h"
 
 #define PACMAN_SPEED 0.15f
 
-typedef struct {
+/*
+ * Struct nommée pour permettre la déclaration anticipée dans ghost.h
+ * sans inclure ce header complet.
+ */
+typedef struct Pacman {
     int       col;
     int       row;
     Direction dir_current;
