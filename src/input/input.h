@@ -1,14 +1,12 @@
 #pragma once
 
 #include <SDL3/SDL.h>
+#include "../types.h"
 
-typedef enum {
-    DIR_NONE  = 0,
-    DIR_UP    = 1,
-    DIR_DOWN  = 2,
-    DIR_LEFT  = 3,
-    DIR_RIGHT = 4,
-} Direction;
+/*
+ * ISP : ce header ne concerne que la mécanique d'entrée clavier.
+ * Direction est défini dans types.h, séparé de InputState.
+ */
 
 typedef struct {
     Direction requested;

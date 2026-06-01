@@ -123,3 +123,21 @@ bool maze_try_eat_fruit(Maze *maze, int col, int row) {
     }
     return false;
 }
+
+int maze_tunnel_col(int col) {
+    if (col < 0)           return MAZE_COLS - 1;
+    if (col >= MAZE_COLS)  return 0;
+    return col;
+}
+
+bool maze_is_passable(const Maze *maze, int col, int row, bool door_passable) {
+    col = maze_tunnel_col(col);
+    if (row < 0 || row >= MAZE_ROWS)
+        return false;
+    CellType cell = (CellType)maze->cells[row][col];
+    if (cell == CELL_WALL)
+        return false;
+    if (cell == CELL_GHOST_DOOR && !door_passable)
+        return false;
+    return true;
+}

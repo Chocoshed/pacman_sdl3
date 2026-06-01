@@ -31,9 +31,26 @@ typedef struct {
     float   fruit_timer;
 } Maze;
 
+/* ---- Opérations sur les cases ---- */
+
 void     maze_init(Maze *maze);
 bool     maze_is_wall(const Maze *maze, int col, int row);
 CellType maze_eat_dot(Maze *maze, int col, int row);
 int      maze_dots_remaining(const Maze *maze);
 void     maze_update_fruit(Maze *maze, float delta_time);
 bool     maze_try_eat_fruit(Maze *maze, int col, int row);
+
+/* ---- Tunnel et franchissabilité (DIP : ghost.c utilise ces fonctions) ---- */
+
+/*
+ * Retourne col après application du wrap horizontal du tunnel.
+ * col < 0 → MAZE_COLS - 1 ; col >= MAZE_COLS → 0.
+ */
+int maze_tunnel_col(int col);
+
+/*
+ * Vérifie si la case (col, row) est franchissable.
+ *   door_passable : true si CELL_GHOST_DOOR est traversable (fantôme EATEN ou IN_HOUSE).
+ * Applique le wrap tunnel sur col automatiquement.
+ */
+bool maze_is_passable(const Maze *maze, int col, int row, bool door_passable);
