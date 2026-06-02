@@ -29,10 +29,23 @@ void pacman_reset(Pacman *pacman) {
     pacman->dir_current  = DIR_LEFT;
     pacman->dir_buffered = DIR_LEFT;
     pacman->move_timer   = 0.0f;
+    pacman->anim_frame   = 0;
+    pacman->anim_timer   = 0.0f;
 }
 
 void pacman_init(Pacman *pacman) {
     pacman_reset(pacman);
+}
+
+void pacman_update_anim(Pacman *pacman, float delta_time) {
+    static const int SEQ[] = {0, 1, 2, 1};
+    static int seq_idx = 0;
+    pacman->anim_timer += delta_time;
+    if (pacman->anim_timer >= 0.08f) {
+        pacman->anim_timer -= 0.08f;
+        seq_idx = (seq_idx + 1) % 4;
+        pacman->anim_frame = SEQ[seq_idx];
+    }
 }
 
 void pacman_update(Pacman *pacman, Maze *maze, Score *score, Direction input, float delta_time) {

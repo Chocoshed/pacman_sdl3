@@ -1,5 +1,6 @@
 #include "game.h"
 #include "../render/renderer.h"
+#include "../render/sprite.h"
 
 /* ============================================================
  * HELPERS INTERNES
@@ -115,12 +116,12 @@ static void update_game_over(Game *game) {
  * ============================================================ */
 
 static void render_gameplay(const Game *game, SDL_Renderer *renderer) {
-    draw_maze(renderer, &game->maze);
-    draw_pacman(renderer, &game->pacman);
+    draw_maze(renderer, game->sheet, &game->maze);
+    draw_pacman(renderer, game->sheet, &game->pacman);
     for (int i = 0; i < GHOST_COUNT; i++)
-        draw_ghost(renderer, &game->ghosts.ghosts[i]);
-    draw_fruit(renderer, &game->maze, game->score.level);
-    draw_hud(renderer, &game->score);
+        draw_ghost(renderer, game->sheet, &game->ghosts.ghosts[i]);
+    draw_fruit(renderer, game->sheet, &game->maze, game->score.level);
+    draw_hud(renderer, game->sheet, &game->score);
 }
 
 /* ============================================================
@@ -137,17 +138,33 @@ void game_init(Game *game) {
     game->phase         = PHASE_TITLE;
     game->phase_timer   = 0.0f;
     game->should_quit   = false;
+    game->sheet         = NULL;
+}
+
+bool game_load_assets(Game *game, SDL_Renderer *renderer) {
+    game->sheet = sprite_load(renderer, "assets/spritesheetPacman.bmp");
+    return game->sheet != NULL;
+}
+
+void game_quit(Game *game) {
+    sprite_destroy(game->sheet);
+    game->sheet = NULL;
 }
 
 void game_update(Game *game, float delta_time) {
+    if (game->phase == PHASE_PLAY || game->phase == PHASE_PAUSE) {
+        pacman_update_anim(&game->pacman, delta_time);
+        ghosts_update_anims(&game->ghosts, delta_time);
+    }
+
     switch (game->phase) {
-        case PHASE_TITLE:      update_title(game);               break;
-        case PHASE_MENU:       update_menu(game);                break;
-        case PHASE_PLAY:       update_play(game, delta_time);    break;
-        case PHASE_PAUSE:      update_pause(game);               break;
+        case PHASE_TITLE:       update_title(game);                break;
+        case PHASE_MENU:        update_menu(game);                 break;
+        case PHASE_PLAY:        update_play(game, delta_time);     break;
+        case PHASE_PAUSE:       update_pause(game);                break;
         case PHASE_DYING:
         case PHASE_LEVEL_CLEAR: update_transition(game, delta_time); break;
-        case PHASE_GAME_OVER:  update_game_over(game);           break;
+        case PHASE_GAME_OVER:   update_game_over(game);            break;
     }
 
     input_clear_actions(&game->input);
@@ -164,10 +181,22 @@ void game_render(const Game *game, SDL_Renderer *renderer) {
             break;
 
         case PHASE_PLAY:
-        case PHASE_DYING:
         case PHASE_LEVEL_CLEAR:
             render_gameplay(game, renderer);
             break;
+
+        case PHASE_DYING: {
+            float elapsed     = DEATH_PAUSE_DURATION - game->phase_timer;
+            int   death_frame = (int)(elapsed / DEATH_PAUSE_DURATION * PACMAN_DEATH_FRAMES);
+            if (death_frame >= PACMAN_DEATH_FRAMES) death_frame = PACMAN_DEATH_FRAMES - 1;
+            draw_maze(renderer, game->sheet, &game->maze);
+            draw_pacman_death(renderer, game->sheet, &game->pacman, death_frame);
+            for (int i = 0; i < GHOST_COUNT; i++)
+                draw_ghost(renderer, game->sheet, &game->ghosts.ghosts[i]);
+            draw_fruit(renderer, game->sheet, &game->maze, game->score.level);
+            draw_hud(renderer, game->sheet, &game->score);
+            break;
+        }
 
         case PHASE_PAUSE:
             render_gameplay(game, renderer);

@@ -58,7 +58,9 @@ struct Ghost {
     float         move_timer;
     float         frightened_timer;
     float         eaten_timer;
-    GhostTargetFn compute_target;  /* fn d'IA spécifique à ce fantôme */
+    GhostTargetFn compute_target;
+    int           anim_frame;
+    float         anim_timer;
 };
 
 struct Ghosts {
@@ -74,6 +76,7 @@ struct Ghosts {
 
 void ghosts_init(Ghosts *ghosts);
 void ghosts_update(Ghosts *ghosts, const Maze *maze, const Pacman *pacman, float delta_time);
+void ghosts_update_anims(Ghosts *ghosts, float delta_time);
 void ghosts_set_frightened(Ghosts *ghosts);
 void ghost_set_eaten(Ghost *ghost);
 void ghosts_reset(Ghosts *ghosts);

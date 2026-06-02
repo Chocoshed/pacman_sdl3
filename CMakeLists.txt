@@ -43,6 +43,7 @@ add_executable(Projet WIN32
     src/render/renderer_world.c
     src/render/renderer_hud.c
     src/render/renderer_ui.c
+    src/render/sprite.c
     src/input/input.c
 )
 

@@ -184,6 +184,8 @@ static void ghost_reset(Ghost *g) {
     g->frightened_timer = 0.0f;
     g->eaten_timer      = 0.0f;
     g->compute_target   = TARGET_FNS[g->id];
+    g->anim_frame       = 0;
+    g->anim_timer       = 0.0f;
 }
 
 /* ============================================================
@@ -372,4 +374,15 @@ void ghosts_reset(Ghosts *ghosts) {
     ghosts->sc_index = 0;
     ghosts->sc_timer = SC_DURATIONS[0];
     ghosts->in_chase = false;
+}
+
+void ghosts_update_anims(Ghosts *ghosts, float delta_time) {
+    for (int i = 0; i < GHOST_COUNT; i++) {
+        Ghost *g = &ghosts->ghosts[i];
+        g->anim_timer += delta_time;
+        if (g->anim_timer >= 0.15f) {
+            g->anim_timer -= 0.15f;
+            g->anim_frame = 1 - g->anim_frame;
+        }
+    }
 }

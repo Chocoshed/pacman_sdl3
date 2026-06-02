@@ -1,12 +1,16 @@
 #include "renderer.h"
+#include "sprite_coords.h"
 
-void draw_hud(SDL_Renderer *renderer, const Score *score) {
-    /* Ligne 0 : vies (carrés jaunes) */
-    SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
-    for (int i = 0; i < score->lives; i++) {
-        SDL_FRect rect = { 4.0f + i * 16.0f, 2.0f, 12.0f, 12.0f };
-        SDL_RenderFillRect(renderer, &rect);
-    }
+static void blit(SDL_Renderer *r, SDL_Texture *sheet,
+                 const SDL_FRect *src, float dx, float dy, float dw, float dh) {
+    SDL_FRect dst = { dx, dy, dw, dh };
+    SDL_RenderTexture(r, sheet, src, &dst);
+}
+
+void draw_hud(SDL_Renderer *renderer, SDL_Texture *sheet, const Score *score) {
+    /* Ligne 0 : vies — sprite bouche fermée de Pac-Man */
+    for (int i = 0; i < score->lives; i++)
+        blit(renderer, sheet, &PACMAN[0], 4.0f + (float)i * 16.0f, 2.0f, 12.0f, 12.0f);
 
     /* Ligne 1 : barre de score proportionnelle au record */
     int max_score = (score->high_score > 0) ? score->high_score : 10000;
@@ -21,7 +25,7 @@ void draw_hud(SDL_Renderer *renderer, const Score *score) {
     /* Ligne 2 : indicateurs de niveau (carrés cyan) */
     SDL_SetRenderDrawColor(renderer, 0, 255, 255, 255);
     for (int i = 0; i < score->level && i < 20; i++) {
-        SDL_FRect rect = { 4.0f + i * 16.0f, 34.0f, 12.0f, 12.0f };
+        SDL_FRect rect = { 4.0f + (float)i * 16.0f, 34.0f, 12.0f, 12.0f };
         SDL_RenderFillRect(renderer, &rect);
     }
 }

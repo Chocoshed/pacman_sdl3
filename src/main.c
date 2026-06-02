@@ -33,6 +33,15 @@ SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
     }
 
     game_init(&state->game);
+
+    if (!game_load_assets(&state->game, state->renderer)) {
+        SDL_Log("Impossible de charger les assets");
+        SDL_DestroyRenderer(state->renderer);
+        SDL_DestroyWindow(state->window);
+        SDL_free(state);
+        return SDL_APP_FAILURE;
+    }
+
     state->last_ticks = SDL_GetTicks();
     *appstate = state;
     return SDL_APP_CONTINUE;
@@ -74,6 +83,7 @@ void SDL_AppQuit(void *appstate, SDL_AppResult result) {
     (void)result;
     AppState *state = (AppState *)appstate;
     if (state) {
+        game_quit(&state->game);
         SDL_DestroyRenderer(state->renderer);
         SDL_DestroyWindow(state->window);
         SDL_free(state);

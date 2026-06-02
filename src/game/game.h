@@ -38,15 +38,16 @@ typedef struct {
  * ============================================================ */
 
 typedef struct {
-    Maze       maze;
-    InputState input;
-    Pacman     pacman;
-    Score      score;
-    Ghosts     ghosts;
-    MenuState  menu;
-    GamePhase  phase;
-    float      phase_timer;
-    bool       should_quit;  /* vrai = l'application doit se fermer */
+    Maze         maze;
+    InputState   input;
+    Pacman       pacman;
+    Score        score;
+    Ghosts       ghosts;
+    MenuState    menu;
+    GamePhase    phase;
+    float        phase_timer;
+    bool         should_quit;
+    SDL_Texture *sheet;
 } Game;
 
 /* ============================================================
@@ -54,5 +55,7 @@ typedef struct {
  * ============================================================ */
 
 void game_init(Game *game);
+bool game_load_assets(Game *game, SDL_Renderer *renderer);
 void game_update(Game *game, float delta_time);
 void game_render(const Game *game, SDL_Renderer *renderer);
+void game_quit(Game *game);
