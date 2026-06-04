@@ -30,6 +30,14 @@ static const int RELEASE_DOTS[GHOST_COUNT] = {
     [GHOST_CLYDE]  = 60,
 };
 
+/* Directions initiales — reproduit l'arcade original */
+static const Direction GHOST_START_DIR[GHOST_COUNT] = {
+    [GHOST_BLINKY] = DIR_LEFT,
+    [GHOST_PINKY]  = DIR_DOWN,
+    [GHOST_INKY]   = DIR_UP,
+    [GHOST_CLYDE]  = DIR_DOWN,
+};
+
 #define EXIT_COL    13   /* cible de sortie au-dessus de la porte */
 #define EXIT_ROW    11
 #define OUTSIDE_ROW 14   /* row <= OUTSIDE_ROW = fantôme sorti    */
@@ -178,11 +186,11 @@ static const GhostTargetFn TARGET_FNS[GHOST_COUNT] = {
 static void ghost_reset(Ghost *g) {
     g->col              = GHOST_START[g->id].col;
     g->row              = GHOST_START[g->id].row;
-    g->dir              = DIR_LEFT;
+    g->dir              = GHOST_START_DIR[g->id];
     g->mode             = (g->id == GHOST_BLINKY) ? GHOST_SCATTER : GHOST_IN_HOUSE;
     g->move_timer       = 0.0f;
     g->frightened_timer = 0.0f;
-    g->eaten_timer      = 0.0f;
+    g->force_exit       = false;
     g->compute_target   = TARGET_FNS[g->id];
     g->anim_frame       = 0;
     g->anim_timer       = 0.0f;
@@ -237,7 +245,6 @@ static void move_toward(Ghost *ghost, const Maze *maze, int tcol, int trow) {
 static void move_random(Ghost *ghost, const Maze *maze) {
     static const Direction ALL_DIRS[] = { DIR_UP, DIR_DOWN, DIR_LEFT, DIR_RIGHT };
 
-    bool      door_ok   = (ghost->mode == GHOST_EATEN || ghost->mode == GHOST_IN_HOUSE);
     Direction forbidden = dir_opposite(ghost->dir);
     Direction valid[4];
     int       count = 0;
@@ -246,9 +253,12 @@ static void move_random(Ghost *ghost, const Maze *maze) {
         Direction d = ALL_DIRS[i];
         if (d == forbidden)
             continue;
+        /* les fantômes effrayés respectent aussi les cases NO_UP — original 1980 */
+        if (d == DIR_UP && is_no_up_tile(ghost->col, ghost->row))
+            continue;
         int dcol, drow;
         dir_to_offset(d, &dcol, &drow);
-        if (maze_is_passable(maze, ghost->col + dcol, ghost->row + drow, door_ok))
+        if (maze_is_passable(maze, ghost->col + dcol, ghost->row + drow, false))
             valid[count++] = d;
     }
 
@@ -272,7 +282,7 @@ void ghosts_init(Ghosts *ghosts) {
         Ghost *g = &ghosts->ghosts[i];
         g->id    = (GhostId)i;
         ghost_reset(g);
-        g->move_timer = (float)i * (GHOST_SPEED / GHOST_COUNT);
+        g->move_timer = (float)i * (GHOST_SPEED_NORMAL / GHOST_COUNT);
     }
     ghosts->sc_index = 0;
     ghosts->sc_timer = SC_DURATIONS[0];
@@ -309,21 +319,30 @@ void ghosts_update(Ghosts *ghosts, const Maze *maze, const Pacman *pacman, float
             if (g->frightened_timer <= 0.0f)
                 g->mode = ghosts->in_chase ? GHOST_CHASE : GHOST_SCATTER;
         }
-        if (g->mode == GHOST_EATEN) {
-            g->eaten_timer -= delta_time;
-            if (g->eaten_timer <= 0.0f)
-                ghost_reset(g);
+        /* Note : GHOST_EATEN est résolu par position (pas par timer) */
+
+        /* Vitesse propre à chaque mode — reproduit les % de l'arcade 1980 */
+        float speed;
+        switch (g->mode) {
+            case GHOST_FRIGHTENED: speed = GHOST_SPEED_FRIGHTENED; break;
+            case GHOST_EATEN:      speed = GHOST_SPEED_EATEN;      break;
+            default:               speed = GHOST_SPEED_NORMAL;     break;
         }
 
         g->move_timer += delta_time;
-        if (g->move_timer < GHOST_SPEED)
+        if (g->move_timer < speed)
             continue;
         g->move_timer = 0.0f;
 
         switch (g->mode) {
 
             case GHOST_IN_HOUSE:
-                if (maze->dots_eaten >= RELEASE_DOTS[g->id]) {
+                /*
+                 * force_exit = vrai quand le fantôme rentre après avoir été mangé.
+                 * Il sort alors immédiatement, sans attendre les dots.
+                 */
+                if (g->force_exit || maze->dots_eaten >= RELEASE_DOTS[g->id]) {
+                    g->force_exit = false;
                     move_toward(g, maze, EXIT_COL, EXIT_ROW);
                     if (g->row <= OUTSIDE_ROW)
                         g->mode = ghosts->in_chase ? GHOST_CHASE : GHOST_SCATTER;
@@ -334,10 +353,21 @@ void ghosts_update(Ghosts *ghosts, const Maze *maze, const Pacman *pacman, float
                 move_random(g, maze);
                 break;
 
-            case GHOST_EATEN:
-                move_toward(g, maze,
-                    GHOST_START[GHOST_PINKY].col, GHOST_START[GHOST_PINKY].row);
+            case GHOST_EATEN: {
+                /*
+                 * Les yeux rentrent rapidement vers le centre de la maison.
+                 * Dès que la position est atteinte, le fantôme re-sort immédiatement
+                 * (force_exit) — pas de timer arbitraire.
+                 */
+                int hcol = GHOST_START[GHOST_PINKY].col;
+                int hrow = GHOST_START[GHOST_PINKY].row;
+                move_toward(g, maze, hcol, hrow);
+                if (g->col == hcol && g->row == hrow) {
+                    g->mode       = GHOST_IN_HOUSE;
+                    g->force_exit = true;
+                }
                 break;
+            }
 
             case GHOST_SCATTER:
                 move_toward(g, maze, SCATTER_TARGET[g->id].col, SCATTER_TARGET[g->id].row);
@@ -357,6 +387,8 @@ void ghosts_set_frightened(Ghosts *ghosts) {
     for (int i = 0; i < GHOST_COUNT; i++) {
         Ghost *g = &ghosts->ghosts[i];
         if (g->mode != GHOST_EATEN && g->mode != GHOST_IN_HOUSE) {
+            /* Demi-tour immédiat — règle de l'original 1980 */
+            g->dir              = dir_opposite(g->dir);
             g->mode             = GHOST_FRIGHTENED;
             g->frightened_timer = GHOST_FRIGHTENED_DURATION;
         }
@@ -364,8 +396,7 @@ void ghosts_set_frightened(Ghosts *ghosts) {
 }
 
 void ghost_set_eaten(Ghost *ghost) {
-    ghost->mode        = GHOST_EATEN;
-    ghost->eaten_timer = GHOST_EATEN_DURATION;
+    ghost->mode = GHOST_EATEN;
 }
 
 void ghosts_reset(Ghosts *ghosts) {

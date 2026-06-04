@@ -19,9 +19,10 @@ typedef struct Ghosts  Ghosts;
  * ============================================================ */
 
 #define GHOST_COUNT               4
-#define GHOST_SPEED               0.2f
+#define GHOST_SPEED_NORMAL        0.20f  /* 75 % de la vitesse de Pac-Man */
+#define GHOST_SPEED_FRIGHTENED    0.30f  /* 50 % — fantôme effrayé        */
+#define GHOST_SPEED_EATEN         0.10f  /* 150 % — yeux qui rentrent     */
 #define GHOST_FRIGHTENED_DURATION 6.0f
-#define GHOST_EATEN_DURATION      5.0f
 
 /* ============================================================
  * TYPES
@@ -57,6 +58,7 @@ struct Ghost {
     GhostMode     mode;
     float         move_timer;
     float         frightened_timer;
+    bool          force_exit;       /* vrai quand le fantôme revient de mangé et doit sortir immédiatement */
     float         eaten_timer;
     GhostTargetFn compute_target;
     int           anim_frame;
