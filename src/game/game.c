@@ -11,10 +11,16 @@ static void reset_positions(Game *game) {
     ghosts_reset(&game->ghosts);
 }
 
+static void clear_popups(Game *game) {
+    for (int i = 0; i < SCORE_POPUP_MAX; i++)
+        game->popups[i].timer = 0.0f;
+}
+
 static void start_new_game(Game *game) {
     score_init(&game->score);
     maze_init(&game->maze);
     reset_positions(game);
+    clear_popups(game);
     game->phase       = PHASE_PLAY;
     game->phase_timer = 0.0f;
 }
@@ -27,8 +33,16 @@ static void check_collisions(Game *game) {
             continue;
 
         if (g->mode == GHOST_FRIGHTENED) {
+            int popup_idx = (game->score.ghost_combo < SCORE_POPUP_MAX)
+                                ? game->score.ghost_combo : SCORE_POPUP_MAX - 1;
             ghost_set_eaten(g);
             score_eat_ghost(&game->score);
+            for (int j = 0; j < SCORE_POPUP_MAX; j++) {
+                if (game->popups[j].timer <= 0.0f) {
+                    game->popups[j] = (ScorePopup){ g->col, g->row, popup_idx, SCORE_POPUP_DURATION };
+                    break;
+                }
+            }
         } else if (g->mode == GHOST_SCATTER || g->mode == GHOST_CHASE) {
             score_lose_life(&game->score);
             game->phase       = (game->score.lives == 0) ? PHASE_GAME_OVER : PHASE_DYING;
@@ -82,6 +96,10 @@ static void update_play(Game *game, float delta_time) {
         game->phase_timer = LEVEL_PAUSE_DURATION;
     }
 
+    for (int i = 0; i < SCORE_POPUP_MAX; i++)
+        if (game->popups[i].timer > 0.0f)
+            game->popups[i].timer -= delta_time;
+
     if (game->input.pause)
         game->phase = PHASE_PAUSE;
 }
@@ -121,6 +139,7 @@ static void render_gameplay(const Game *game, SDL_Renderer *renderer) {
     for (int i = 0; i < GHOST_COUNT; i++)
         draw_ghost(renderer, game->sheet, &game->ghosts.ghosts[i]);
     draw_fruit(renderer, game->sheet, &game->maze, game->score.level);
+    draw_score_popups(renderer, game->sheet, game->popups, SCORE_POPUP_MAX);
     draw_hud(renderer, game->sheet, &game->score);
 }
 
@@ -139,6 +158,7 @@ void game_init(Game *game) {
     game->phase_timer   = 0.0f;
     game->should_quit   = false;
     game->sheet         = NULL;
+    clear_popups(game);
 }
 
 bool game_load_assets(Game *game, SDL_Renderer *renderer) {
@@ -191,9 +211,6 @@ void game_render(const Game *game, SDL_Renderer *renderer) {
             if (death_frame >= PACMAN_DEATH_FRAMES) death_frame = PACMAN_DEATH_FRAMES - 1;
             draw_maze(renderer, game->sheet, &game->maze);
             draw_pacman_death(renderer, game->sheet, &game->pacman, death_frame);
-            for (int i = 0; i < GHOST_COUNT; i++)
-                draw_ghost(renderer, game->sheet, &game->ghosts.ghosts[i]);
-            draw_fruit(renderer, game->sheet, &game->maze, game->score.level);
             draw_hud(renderer, game->sheet, &game->score);
             break;
         }

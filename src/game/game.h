@@ -48,6 +48,7 @@ typedef struct {
     float        phase_timer;
     bool         should_quit;
     SDL_Texture *sheet;
+    ScorePopup   popups[SCORE_POPUP_MAX];
 } Game;
 
 /* ============================================================

@@ -107,3 +107,18 @@ void draw_fruit(SDL_Renderer *renderer, SDL_Texture *sheet,
          (float)(FRUIT_COL * CELL_SIZE), (float)(FRUIT_ROW * CELL_SIZE),
          (float)CELL_SIZE, (float)CELL_SIZE);
 }
+
+void draw_score_popups(SDL_Renderer *renderer, SDL_Texture *sheet,
+                       const ScorePopup *popups, int count) {
+    for (int i = 0; i < count; i++) {
+        if (popups[i].timer <= 0.0f)
+            continue;
+        int idx = popups[i].sprite_idx;
+        if (idx < 0 || idx >= SCORE_POPUP_COUNT)
+            idx = 0;
+        blit(renderer, sheet, &SCORE_POPUP[idx],
+             (float)(popups[i].col * CELL_SIZE),
+             (float)(popups[i].row * CELL_SIZE),
+             (float)CELL_SIZE, (float)CELL_SIZE);
+    }
+}

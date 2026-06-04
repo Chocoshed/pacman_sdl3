@@ -13,6 +13,19 @@ typedef struct {
     int  ghost_combo;
 } Score;
 
+/* -------------------------------------------------------------------------
+ * SCORE POPUP — affiché brièvement à la position d'un fantôme mangé
+ * -------------------------------------------------------------------------*/
+#define SCORE_POPUP_MAX      4
+#define SCORE_POPUP_DURATION 1.0f
+
+typedef struct {
+    int   col;
+    int   row;
+    int   sprite_idx; /* 0=200pts, 1=400pts, 2=800pts, 3=1600pts */
+    float timer;      /* <= 0 : inactif */
+} ScorePopup;
+
 extern const int FRUIT_VALUES[FRUIT_TYPES];
 
 void score_init(Score *score);
