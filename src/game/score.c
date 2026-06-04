@@ -18,6 +18,7 @@ void score_init(Score *score) {
     score->level              = 1;
     score->power_pellet_eaten = false;
     score->ghost_combo        = 0;
+    score->fruit_history_count = 0;
 }
 
 void score_add_points(Score *score, int points) {
@@ -49,4 +50,15 @@ int score_fruit_value(int level) {
     int idx = level - 1;
     if (idx >= FRUIT_TYPES) idx = FRUIT_TYPES - 1;
     return FRUIT_VALUES[idx];
+}
+
+void score_record_fruit(Score *score, int level) {
+    int sprite_idx = (level - 1 < FRUIT_TYPES) ? level - 1 : FRUIT_TYPES - 1;
+    if (score->fruit_history_count < FRUIT_HISTORY_MAX) {
+        score->fruit_history[score->fruit_history_count++] = sprite_idx;
+    } else {
+        for (int i = 0; i < FRUIT_HISTORY_MAX - 1; i++)
+            score->fruit_history[i] = score->fruit_history[i + 1];
+        score->fruit_history[FRUIT_HISTORY_MAX - 1] = sprite_idx;
+    }
 }

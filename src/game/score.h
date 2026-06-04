@@ -4,6 +4,8 @@
 
 #define FRUIT_TYPES 8
 
+#define FRUIT_HISTORY_MAX 7
+
 typedef struct {
     int  score;
     int  high_score;
@@ -11,6 +13,8 @@ typedef struct {
     int  level;
     bool power_pellet_eaten;
     int  ghost_combo;
+    int  fruit_history[FRUIT_HISTORY_MAX]; /* indices de sprite (0-7) des fruits collectés */
+    int  fruit_history_count;
 } Score;
 
 /* -------------------------------------------------------------------------
@@ -34,3 +38,4 @@ void score_lose_life(Score *score);
 void score_next_level(Score *score);
 int  score_fruit_value(int level);
 int  score_eat_ghost(Score *score);
+void score_record_fruit(Score *score, int level);

@@ -8,11 +8,7 @@ static void blit(SDL_Renderer *r, SDL_Texture *sheet,
 }
 
 void draw_hud(SDL_Renderer *renderer, SDL_Texture *sheet, const Score *score) {
-    /* Ligne 0 : vies — sprite bouche fermée de Pac-Man */
-    for (int i = 0; i < score->lives; i++)
-        blit(renderer, sheet, &PACMAN[0], 4.0f + (float)i * 16.0f, 2.0f, 12.0f, 12.0f);
-
-    /* Ligne 1 : barre de score proportionnelle au record */
+    /* Barre de score proportionnelle au record */
     int max_score = (score->high_score > 0) ? score->high_score : 10000;
     int bar_w     = (score->score * 448) / max_score;
     if (bar_w > 448) bar_w = 448;
@@ -22,10 +18,22 @@ void draw_hud(SDL_Renderer *renderer, SDL_Texture *sheet, const Score *score) {
         SDL_RenderFillRect(renderer, &bar);
     }
 
-    /* Ligne 2 : indicateurs de niveau (carrés cyan) */
+    /* Indicateurs de niveau (carrés cyan) */
     SDL_SetRenderDrawColor(renderer, 0, 255, 255, 255);
     for (int i = 0; i < score->level && i < 20; i++) {
         SDL_FRect rect = { 4.0f + (float)i * 16.0f, 34.0f, 12.0f, 12.0f };
         SDL_RenderFillRect(renderer, &rect);
+    }
+
+    /* Vies — bas-gauche, sprite bouche mi-ouverte */
+    float bottom_y = (float)((MAZE_ROWS - 1) * CELL_SIZE) + 1.0f;
+    for (int i = 0; i < score->lives; i++)
+        blit(renderer, sheet, &PACMAN[1], 4.0f + (float)i * 16.0f, bottom_y, 14.0f, 14.0f);
+
+    /* 7 derniers fruits collectés — bas-droite, du plus ancien (gauche) au plus récent (droite) */
+    float fx_right = (float)(MAZE_COLS * CELL_SIZE) - 4.0f;
+    for (int i = 0; i < score->fruit_history_count; i++) {
+        float x = fx_right - (float)(score->fruit_history_count - i) * 16.0f;
+        blit(renderer, sheet, &FRUIT_SPRITES[score->fruit_history[i]], x, bottom_y, 14.0f, 14.0f);
     }
 }

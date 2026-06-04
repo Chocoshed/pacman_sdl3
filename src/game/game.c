@@ -86,8 +86,10 @@ static void update_play(Game *game, float delta_time) {
     ghosts_update(&game->ghosts, &game->maze, &game->pacman, delta_time);
     maze_update_fruit(&game->maze, delta_time);
 
-    if (maze_try_eat_fruit(&game->maze, game->pacman.col, game->pacman.row))
+    if (maze_try_eat_fruit(&game->maze, game->pacman.col, game->pacman.row)) {
         score_add_points(&game->score, score_fruit_value(game->score.level));
+        score_record_fruit(&game->score, game->score.level);
+    }
 
     check_collisions(game);
 
