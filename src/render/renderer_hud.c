@@ -7,16 +7,26 @@ static void blit(SDL_Renderer *r, SDL_Texture *sheet,
     SDL_RenderTexture(r, sheet, src, &dst);
 }
 
-void draw_hud(SDL_Renderer *renderer, SDL_Texture *sheet, const Score *score) {
-    /* Barre de score proportionnelle au record */
-    int max_score = (score->high_score > 0) ? score->high_score : 10000;
-    int bar_w     = (score->score * 448) / max_score;
-    if (bar_w > 448) bar_w = 448;
-    if (bar_w > 0) {
-        SDL_FRect bar = { 0.0f, 18.0f, (float)bar_w, 12.0f };
-        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-        SDL_RenderFillRect(renderer, &bar);
+static void draw_number(SDL_Renderer *renderer, SDL_Texture *sheet,
+                        int value, float x, float y) {
+    int digits[10];
+    int count = 0;
+    if (value == 0) {
+        digits[count++] = 0;
+    } else {
+        int v = value;
+        while (v > 0) { digits[count++] = v % 10; v /= 10; }
+        for (int i = 0, j = count - 1; i < j; i++, j--)
+            { int t = digits[i]; digits[i] = digits[j]; digits[j] = t; }
     }
+    for (int i = 0; i < count; i++)
+        blit(renderer, sheet, &GLYPH_DIGIT[digits[i]],
+             x + (float)i * 9.0f, y, 8.0f, 8.0f);
+}
+
+void draw_hud(SDL_Renderer *renderer, SDL_Texture *sheet, const Score *score) {
+    /* Score — haut-gauche, chiffres 8×8 */
+    draw_number(renderer, sheet, score->score, 4.0f, 4.0f);
 
     /* Indicateurs de niveau (carrés cyan) */
     SDL_SetRenderDrawColor(renderer, 0, 255, 255, 255);
